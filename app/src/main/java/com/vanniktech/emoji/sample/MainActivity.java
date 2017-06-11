@@ -2,6 +2,8 @@ package com.vanniktech.emoji.sample;
 
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Px;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,6 +27,7 @@ import com.vanniktech.emoji.listeners.OnEmojiPopupShownListener;
 import com.vanniktech.emoji.listeners.OnSoftKeyboardCloseListener;
 import com.vanniktech.emoji.listeners.OnSoftKeyboardOpenListener;
 import com.vanniktech.emoji.one.EmojiOneProvider;
+import com.vanniktech.emoji.twitter.TwitterEmojiProvider;
 
 public class MainActivity extends AppCompatActivity {
   static final String TAG = "MainActivity";
@@ -93,6 +96,10 @@ public class MainActivity extends AppCompatActivity {
         EmojiManager.install(new GoogleEmojiProvider());
         recreate();
         return true;
+      case R.id.variantTwitter:
+        EmojiManager.install(new TwitterEmojiProvider());
+        recreate();
+        return true;
       case R.id.variantEmojiOne:
         EmojiManager.install(new EmojiOneProvider());
         recreate();
@@ -126,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
           }
         })
         .setOnEmojiClickedListener(new OnEmojiClickedListener() {
-          @Override public void onEmojiClicked(final Emoji emoji) {
+          @Override public void onEmojiClicked(@NonNull final Emoji emoji) {
             Log.d(TAG, "Clicked on emoji");
           }
         })
@@ -136,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
           }
         })
         .setOnSoftKeyboardOpenListener(new OnSoftKeyboardOpenListener() {
-          @Override public void onKeyboardOpen(final int keyBoardHeight) {
+          @Override public void onKeyboardOpen(@Px final int keyBoardHeight) {
             Log.d(TAG, "Opened soft keyboard");
           }
         })
