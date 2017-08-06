@@ -1,7 +1,10 @@
 package com.vanniktech.emoji;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.Spannable;
+import android.text.TextUtils;
 import com.vanniktech.emoji.emoji.Emoji;
 import com.vanniktech.emoji.emoji.EmojiCategory;
 import java.util.ArrayList;
@@ -32,9 +35,10 @@ public final class EmojiManager {
     }
   };
 
-  private final Map<String, Emoji> emojiMap = new LinkedHashMap<>();
+  private final Map<String, Emoji> emojiMap = new LinkedHashMap<>(GUESSED_UNICODE_AMOUNT);
   private EmojiCategory[] categories;
   private Pattern emojiPattern;
+  private Pattern emojiRepetitivePattern;
 
   private EmojiManager() {
     // No instances apart from singleton.
@@ -57,12 +61,14 @@ public final class EmojiManager {
 
     final List<String> unicodesForPattern = new ArrayList<>(GUESSED_UNICODE_AMOUNT);
 
+    final int categoriesSize = INSTANCE.categories.length;
     //noinspection ForLoopReplaceableByForEach
-    for (int i = 0; i < INSTANCE.categories.length; i++) {
+    for (int i = 0; i < categoriesSize; i++) {
       final Emoji[] emojis = checkNotNull(INSTANCE.categories[i].getEmojis(), "emojies == null");
 
+      final int emojisSize = emojis.length;
       //noinspection ForLoopReplaceableByForEach
-      for (int j = 0; j < emojis.length; j++) {
+      for (int j = 0; j < emojisSize; j++) {
         final Emoji emoji = emojis[j];
         final String unicode = emoji.getUnicode();
         final List<Emoji> variants = emoji.getVariants();
@@ -90,17 +96,45 @@ public final class EmojiManager {
 
     final StringBuilder patternBuilder = new StringBuilder(GUESSED_TOTAL_PATTERN_LENGTH);
 
-    for (final String unicode : unicodesForPattern) {
-      patternBuilder.append(Pattern.quote(unicode)).append('|');
+    final int unicodesForPatternSize = unicodesForPattern.size();
+    for (int i = 0; i < unicodesForPatternSize; i++) {
+      patternBuilder.append(Pattern.quote(unicodesForPattern.get(i))).append('|');
     }
 
-    INSTANCE.emojiPattern = Pattern.compile(patternBuilder.deleteCharAt(patternBuilder.length() - 1).toString());
+    final String regex = patternBuilder.deleteCharAt(patternBuilder.length() - 1).toString();
+    INSTANCE.emojiPattern = Pattern.compile(regex);
+    INSTANCE.emojiRepetitivePattern = Pattern.compile('(' + regex + ")+");
   }
 
   static void destroy() {
     INSTANCE.emojiMap.clear();
     INSTANCE.categories = null;
     INSTANCE.emojiPattern = null;
+    INSTANCE.emojiRepetitivePattern = null;
+  }
+
+  static void replaceWithImages(final Context context, final Spannable text, final float emojiSize) {
+    final EmojiManager emojiManager = EmojiManager.getInstance();
+    final EmojiSpan[] existingSpans = text.getSpans(0, text.length(), EmojiSpan.class);
+    final List<Integer> existingSpanPositions = new ArrayList<>(existingSpans.length);
+
+    final int size = existingSpans.length;
+    //noinspection ForLoopReplaceableByForEach
+    for (int i = 0; i < size; i++) {
+      existingSpanPositions.add(text.getSpanStart(existingSpans[i]));
+    }
+
+    final List<EmojiRange> findAllEmojis = emojiManager.findAllEmojis(text);
+
+    //noinspection ForLoopReplaceableByForEach
+    for (int i = 0; i < findAllEmojis.size(); i++) {
+      final EmojiRange location = findAllEmojis.get(i);
+
+      if (!existingSpanPositions.contains(location.start)) {
+        text.setSpan(new EmojiSpan(context, location.emoji.getResource(), emojiSize),
+            location.start, location.end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+      }
+    }
   }
 
   EmojiCategory[] getCategories() {
@@ -108,69 +142,41 @@ public final class EmojiManager {
     return categories; // NOPMD
   }
 
-  @NonNull List<EmojiRange> findAllEmojis(@NonNull final CharSequence text) {
+  Pattern getEmojiRepetitivePattern() {
+    return emojiRepetitivePattern;
+  }
+
+  @NonNull List<EmojiRange> findAllEmojis(@Nullable final CharSequence text) {
     verifyInstalled();
 
     final List<EmojiRange> result = new ArrayList<>();
-    final Matcher matcher = emojiPattern.matcher(text);
 
-    while (matcher.find()) {
-      final Emoji found = findEmoji(text.subSequence(matcher.start(), matcher.end()));
+    if (!TextUtils.isEmpty(text)) {
+      final Matcher matcher = emojiPattern.matcher(text);
 
-      if (found != null) {
-        result.add(new EmojiRange(matcher.start(), matcher.end(), found));
+      while (matcher.find()) {
+        final Emoji found = findEmoji(text.subSequence(matcher.start(), matcher.end()));
+
+        if (found != null) {
+          result.add(new EmojiRange(matcher.start(), matcher.end(), found));
+        }
       }
     }
 
     return result;
   }
 
-  @Nullable Emoji findEmoji(@NonNull final CharSequence candiate) {
+  @Nullable Emoji findEmoji(@NonNull final CharSequence candidate) {
     verifyInstalled();
 
     // We need to call toString on the candidate, since the emojiMap may not find the requested entry otherwise, because
     // the type is different.
-    return emojiMap.get(candiate.toString());
+    return emojiMap.get(candidate.toString());
   }
 
   void verifyInstalled() {
     if (categories == null) {
       throw new IllegalStateException("Please install an EmojiProvider through the EmojiManager.install() method first.");
-    }
-  }
-
-  static class EmojiRange {
-    final int start;
-    final int end;
-    final Emoji emoji;
-
-    EmojiRange(final int start, final int end, @NonNull final Emoji emoji) {
-      this.start = start;
-      this.end = end;
-      this.emoji = emoji;
-    }
-
-    @Override public boolean equals(final Object o) {
-      if (this == o) {
-        return true;
-      }
-
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      final EmojiRange that = (EmojiRange) o;
-
-      return start == that.start
-              && end == that.end
-              && emoji.equals(that.emoji);
-    }
-
-    @Override public int hashCode() {
-      int result = start;
-      result = 31 * result + end;
-      result = 31 * result + emoji.hashCode();
-      return result;
     }
   }
 }
