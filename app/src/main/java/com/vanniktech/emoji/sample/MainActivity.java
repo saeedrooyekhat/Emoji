@@ -4,6 +4,8 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Px;
+import android.support.text.emoji.EmojiCompat;
+import android.support.text.emoji.bundled.BundledEmojiCompatConfig;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +20,7 @@ import com.vanniktech.emoji.EmojiEditText;
 import com.vanniktech.emoji.EmojiImageView;
 import com.vanniktech.emoji.EmojiManager;
 import com.vanniktech.emoji.EmojiPopup;
+import com.vanniktech.emoji.googlecompat.GoogleCompatEmojiProvider;
 import com.vanniktech.emoji.emoji.Emoji;
 import com.vanniktech.emoji.google.GoogleEmojiProvider;
 import com.vanniktech.emoji.ios.IosEmojiProvider;
@@ -30,8 +33,8 @@ import com.vanniktech.emoji.listeners.OnSoftKeyboardOpenListener;
 import com.vanniktech.emoji.one.EmojiOneProvider;
 import com.vanniktech.emoji.twitter.TwitterEmojiProvider;
 
-@SuppressWarnings("CPD-START") // We don't care about duplicate code in the sample.
-public class MainActivity extends AppCompatActivity {
+// We don't care about duplicated code in the sample.
+@SuppressWarnings("CPD-START") public class MainActivity extends AppCompatActivity {
   static final String TAG = "MainActivity";
 
   ChatAdapter chatAdapter;
@@ -40,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
   EmojiEditText editText;
   ViewGroup rootView;
   ImageView emojiButton;
+  EmojiCompat emojiCompat;
 
   @Override protected void onCreate(final Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -100,6 +104,15 @@ public class MainActivity extends AppCompatActivity {
         return true;
       case R.id.variantTwitter:
         EmojiManager.install(new TwitterEmojiProvider());
+        recreate();
+        return true;
+      case R.id.variantGoogleCompat:
+        if (emojiCompat == null) {
+          final EmojiCompat.Config config = new BundledEmojiCompatConfig(this);
+          config.setReplaceAll(true);
+          emojiCompat = EmojiCompat.init(config);
+        }
+        EmojiManager.install(new GoogleCompatEmojiProvider(emojiCompat));
         recreate();
         return true;
       case R.id.variantEmojiOne:

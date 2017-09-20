@@ -41,8 +41,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
     assertThat(EmojiManager.getInstance().getCategories()).isNotEmpty();
   }
 
-  @Test
-  public void noProviderInstalled() {
+  @Test public void noProviderInstalled() {
     assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
       @Override public void call() throws Throwable {
         EmojiManager.getInstance().findEmoji("test");
@@ -134,7 +133,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString(new String(new int[] { 0x1234 }, 0, 1));
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 44, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(1);
   }
@@ -144,7 +143,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString("test" + new String(new int[] { 0x1234 }, 0, 1) + "abc");
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(1);
   }
@@ -154,7 +153,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString(new String(new int[] { 0x1234 }, 0, 1) + new String(new int[] { 0x5678 }, 0, 1));
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(2);
   }
@@ -164,7 +163,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString("abc" + new String(new int[] { 0x1234 }, 0, 1) + "cba" + new String(new int[] { 0x5678 }, 0, 1) + "xyz");
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(2);
   }
@@ -174,7 +173,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString(new String(new int[] { 0x1234, 0x4321 }, 0, 1));
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 11, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(1);
   }
@@ -184,7 +183,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString(new String(new int[] { 0x1234, 0x4321, 0x9999 }, 0, 1));
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(1);
   }
@@ -194,7 +193,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString("");
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(0);
   }
@@ -204,7 +203,7 @@ import static org.assertj.core.api.Java6Assertions.assertThatThrownBy;
 
     final Spannable text = new SpannableString("abcdefg");
 
-    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22);
+    EmojiManager.replaceWithImages(RuntimeEnvironment.application, text, 22, 22);
 
     assertThat(text.getSpans(0, text.length(), EmojiSpan.class)).hasSize(0);
   }

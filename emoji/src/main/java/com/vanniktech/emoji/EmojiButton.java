@@ -10,8 +10,7 @@ import android.support.v7.widget.AppCompatButton;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 
-@SuppressWarnings("CPD-START") // The Emoji widgets have almost the same code, so ignore CPD here.
-public class EmojiButton extends AppCompatButton {
+@SuppressWarnings("CPD-START") public class EmojiButton extends AppCompatButton {
   private float emojiSize;
 
   public EmojiButton(final Context context) {
@@ -46,7 +45,9 @@ public class EmojiButton extends AppCompatButton {
   @Override @CallSuper public void setText(final CharSequence rawText, final BufferType type) {
     final CharSequence text = rawText == null ? "" : rawText;
     final SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(text);
-    EmojiManager.replaceWithImages(getContext(), spannableStringBuilder, emojiSize);
+    final Paint.FontMetrics fontMetrics = getPaint().getFontMetrics();
+    final float defaultEmojiSize = fontMetrics.descent - fontMetrics.ascent;
+    EmojiManager.replaceWithImages(getContext(), spannableStringBuilder, emojiSize, defaultEmojiSize);
     super.setText(spannableStringBuilder, type);
   }
 
